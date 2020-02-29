@@ -1,14 +1,14 @@
-from PIL import Image, ExifTags
 import subprocess
-import filetype
 import os
 import shutil
+import filetype
+import piexif
 
-FINAL_DIR = './final/'
+FINAL_DIR = 'D:/Vadym/Pictures/Sorted/'
 
 
 def get_date(path):
-    exe = 'exiftool'
+    exe = './exiftool.exe'
     process = subprocess.Popen([exe, path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     dict = {}
     for output in process.stdout:
@@ -22,6 +22,29 @@ def get_date(path):
     day = date[2]
     final = year + '.' + month + '.' + day
     return final
+
+
+def get_date_new(path):
+    exe = './exiftool.exe'
+    process = subprocess.Popen([exe, path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    for output in process.stdout:
+        data = output.strip().split(":")
+        key = data[0].strip()
+        if key == 'Create Date':
+            year = data[1].strip()
+            month = data[2].strip()
+            day = data[3].split(' ')[0].strip()
+            return year + "." + month + "." + day
+    process2 = subprocess.Popen([exe, path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    for output in process2.stdout:
+        data = output.strip().split(":")
+        key = data[0].strip()
+        if key == 'File Modification Date/Time':
+            year = data[1].strip()
+            month = data[2].strip()
+            day = data[3].split(' ')[0].strip()
+            return year + "." + month + "." + day
+    return 'other'
 
 
 def get_file_type(path):
@@ -54,6 +77,7 @@ def check_if_exist_file(file1, path):
         for file2 in file_list:
             if file1 == file2:
                 result = False
+                return result
     return result
 
 
@@ -67,25 +91,23 @@ def copy_file(file, from_path, to_path):
 
 def scan(path):
     file_list = os.listdir(path)
-    count = 1
     for file in file_list:
-        print(count)
-        print(file)
+        file_date = "other"
         new_path = path + file
         is_file = is_folder_or_file(new_path)
         if is_file:
             file_type = get_file_type(new_path)
             if file_type == 'image' or file_type == "video":
                 try:
-                    file_date = get_date(new_path)
-                except UnicodeDecodeError:
-                    print(new_path)
-                    return
-
+                    file_date = get_date_new(new_path)
+                except Exception as e:
+                    print("ERROR")
+                    print(e)
                 create_dir(file_date)
                 copy_file(file, new_path, FINAL_DIR + file_date + "/")
         else:
             scan(new_path + '/')
-        count = count + 1
 
-scan("/Volumes/HDD/Photo/test1/")
+
+scan("D:/Vadym/Pictures/test3/")
+
