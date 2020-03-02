@@ -2,16 +2,8 @@ import subprocess
 import os
 import shutil
 import filetype
-import piexif
 import exiftool
-from image_match.goldberg import ImageSignature
-gis = ImageSignature()
-
-a = gis.generate_signature('https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg/687px-Mona_Lisa,_by_Leonardo_da_Vinci,_from_C2RMF_retouched.jpg')
-b = gis.generate_signature('https://pixabay.com/static/uploads/photo/2012/11/28/08/56/mona-lisa-67506_960_720.jpg')
-gis.normalized_distance(a, b)
-
-FINAL_DIR = 'D:/Vadym/Pictures/Sorted/'
+FINAL_DIR = 'D:/Vadym/Pictures/Sorted 2/'
 
 
 def get_exif(path):
@@ -21,6 +13,8 @@ def get_exif(path):
     data = metadata[0]
     file_type = get_file_type(path)
     date = 'other'
+    #for a in data:
+        #print(str(a) + ' - ' + str(data[a]))
     if file_type == 'image':
         try:
             date = format_date(data['EXIF:CreateDate'])
@@ -48,8 +42,42 @@ def get_exif(path):
             return date
         except Exception as e:
             print(e)
-    #for a in data:
-        #print(str(a) + ' - ' + str(data[a]))
+        try:
+            date = format_date(data['File:FileCreateDate'])
+            return date
+        except Exception as e:
+            print(e)
+    else:
+        try:
+            date = format_date(data['EXIF:CreateDate'])
+            return date
+        except Exception as e:
+            print(e)
+        try:
+            date = format_date(data['File:FileModifyDate'])
+            return date
+        except Exception as e:
+            print(e)
+        try:
+            date = format_date(data['File:FileCreateDate'])
+            return date
+        except Exception as e:
+            print(e)
+        try:
+            date = format_date(data['QuickTime:CreateDate'])
+            return date
+        except Exception as e:
+            print(e)
+        try:
+            date = format_date(data['File:FileModifyDate'])
+            return date
+        except Exception as e:
+            print(e)
+        try:
+            date = format_date(data['File:FileCreateDate'])
+            return date
+        except Exception as e:
+            print(e)
     return date
 
 
@@ -138,7 +166,9 @@ def check_if_exist_file(file1, path):
 
 
 def copy_file(file, from_path, to_path):
-    if check_if_exist_file(file, to_path):
+    if file == "Thumbs.db":
+        shutil.copy2(from_path, to_path + file)
+    elif check_if_exist_file(file, to_path):
         shutil.copy2(from_path, to_path + file)
     else:
         new_name = "dub_" + file
@@ -158,29 +188,49 @@ def add_log(text):
 def scan(path):
     file_list = os.listdir(path)
     for file in file_list:
-        file_date = "unknown"
+        file_date = "unknown date"
         new_path = path + file
         is_file = is_folder_or_file(new_path)
         if is_file:
             file_type = get_file_type(new_path)
-            if file_type == 'image' or file_type == "video":
+            if file_type == 'image':
                 try:
                     file_date = get_exif(new_path)
                 except Exception as e:
-                    add_log("error")
+                    add_log("error image")
                     add_log(new_path)
                 create_dir(file_date)
-                copy_file(file, new_path, FINAL_DIR + file_date + "/")
+                create_dir(file_date+"/image")
+                copy_file(file, new_path, FINAL_DIR + file_date + "/image/")
+            elif file_type == "video":
+                try:
+                    file_date = get_exif(new_path)
+                except Exception as e:
+                    add_log("error video")
+                    add_log(new_path)
+                create_dir(file_date)
+                create_dir(file_date + "/video")
+                copy_file(file, new_path, FINAL_DIR + file_date + "/video/")
             else:
-                create_dir("another_format")
-                copy_file(file, new_path, FINAL_DIR + "another_format/")
+                try:
+                    file_date = get_exif(new_path)
+                except Exception as e:
+                    add_log("error video")
+                    add_log(new_path)
+                create_dir(file_date)
+                create_dir(file_date + "/another_format")
+                copy_file(file, new_path, FINAL_DIR + file_date +  "/another_format/")
         else:
             scan(new_path + '/')
 
-unknown = "D:/Vadym/Pictures/unknown/"
+unknown = "D:/Vadym/Pictures/another_format 2/"
 test_folder = 'D:/Vadym/Pictures/test/'
+all = 'D:/Vadym/Pictures/all/'
+unsorted = 'D:/Vadym/Pictures/unknown rename/'
 #scan("E:/Photo/")
 #scan(test_folder)
 #scan(unknown)
-#a = get_exif("test5.MPG")
+#a = get_exif("D:/Vadym/Pictures/unknown date/image/dub.jpg")
 #print(a)
+#scan(all)
+scan(unknown)
